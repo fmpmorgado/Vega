@@ -222,6 +222,7 @@ def init_trajectory(mission,rocket,stage,trajectory,general):
 
             if x!=aux: Data[5][-1]=payload
 
+            print(x, Data[2][-1], T, Hamilton)
                         
             if Hamilton==True: break
             if Data[2][-1]<0: break

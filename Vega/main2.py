@@ -32,7 +32,7 @@ now = time.clock()
 
 mission,rocket,stage,trajectory,general=Rocket_initialize()
 
-
+print(rocket.DV)
 Information(mission,rocket,stage)
 
 
@@ -55,11 +55,10 @@ rocket.count=0
 
 rocket,stage=Rocket_build(mission,rocket,stage, general)
 
+
+print(rocket.DV)
+
 Information(mission,rocket,stage)
-
-
-
-
 
 
 
@@ -71,19 +70,6 @@ optim = True
 
 
 trajectory.vertical_time=trajectory.vertical_time+trajectory.pitch_time
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

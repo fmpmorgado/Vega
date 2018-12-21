@@ -73,10 +73,10 @@ def Rocket_initialize():
 
     general= General()
 
-    general.Trajectory=False                 #In order to perform a trajectory simulation    
+    general.Trajectory=True                 #In order to perform a trajectory simulation    
     general.New_design=False             #If the user wants to use a pre existing rocket              
     general.TWR=True             #If the user wants to use Thrust to weight ratio for each iteration, instead of defining the initial Thrust
-    general.Design_optimization=True #Design and DV optimization
+    general.Design_optimization=False #Design and DV optimization
 
     #############  Trajectory Initialization#####################################
 
@@ -110,14 +110,14 @@ def Rocket_initialize():
     mission.final_velocity=7500       #Final Rocket Velocity
     mission.final_flight_angle=0.0        #Final Flight Path Angle
     
-    mission.payload=1430                 #Mission Payload to carry
+    mission.payload=1430+900                 #Mission Payload to carry
 
 
     #############  Rocket setup and initialization ##################
 
     rocket=Rocket()
 
-    rocket.num_stages=4               #Number of Rocket stages
+    rocket.num_stages=3               #Number of Rocket stages
     rocket.num_boosters=0               #Number of Rocket boosters
 
     rocket.DV=10000                     #Initial guess of Rocket DV, which has to englobe thrust vectoring, gravity and drag losses
@@ -144,12 +144,13 @@ def Rocket_initialize():
     #or can choose to pick a Thrust to Weight Ratio, where the Thrust will depend
     # on the Rocket mass of the current iteration
      
-    Thrust=[2261000,1196000,260000,2420]*rocket.num_stages      #Stage Thrust (depends on the user choice)
+#    Thrust=[2261000,1196000,260000,2420]*rocket.num_stages      #Stage Thrust (depends on the user choice)
+    Thrust=[2261000,1196000,260000]*rocket.num_stages      #Stage Thrust (depends on the user choice)
 
 
     TWR=[2]*rocket.num_stages                       #Thrust to Weight ratio (depends on the user choice)
     
-    Isp=[280,289,296,316]                   #Specific impulse of each stage (mandatory)
+    Isp=[280,289,296]                   #Specific impulse of each stage (mandatory)
 
     Num_engines=[1,1,1,1]             #Number of engines of each stage (mandatory)
     stage_type=["solid","solid","solid","liquid"] #Type of propellant (mandatory)
@@ -166,8 +167,14 @@ def Rocket_initialize():
 
     #######  MASS   ######
     
-    total_mass=[88365+7431,23906+1845,10115+833,550+418]*rocket.num_stages           #Total Mass of the stage (comparison only)
-    propellant_mass=[88365,23906,10115,550]*rocket.num_stages                        #Propellant Mass of the stage (comparison only)
+ #   total_mass=[88365+7431,23906+1845,10115+833,550+418]*rocket.num_stages           #Total Mass of the stage (comparison only)
+ #   propellant_mass=[88365,23906,10115,550]*rocket.num_stages                        #Propellant Mass of the stage (comparison only)
+
+    total_mass=[88365+7431,23906+1845,10115+833]           #Total Mass of the stage (comparison only)
+    propellant_mass=[88365,23906,10115]                        #Propellant Mass of the stage (comparison only)
+
+
+
     Structural_Factor=[0.0]*rocket.num_stages                                        #Structural Factor (*)
 
 
