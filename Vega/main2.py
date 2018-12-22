@@ -118,10 +118,10 @@ def traj_model2(x,rocket):
         return 0
 
     Data,new,Obj=init_trajectory(mission,rocket,stage,trajectory,general)
+    #print(Data[2][-1],Data[3][-1],Data[4][-1],Data[0][-1])
+        
 
-    
-
-    if abs(Data[2][-1]-mission.final_altitude)>25000 or abs(Data[3][-1]-mission.final_velocity)>250 or abs(Data[4][-1])>0.15:
+    if abs(Data[2][-1]-mission.final_altitude)>50000 or abs(Data[3][-1]-mission.final_velocity)>500 or abs(Data[4][-1])>0.5:
         #print("A")
         return 1e20
 
@@ -149,7 +149,7 @@ def design_model(x,rocket,stage):
     rocket.count=rocket.count+1
 
     prob = pg.problem(Traj_Optimization2())
-    algo = pg.algorithm(pg.pso_gen(gen=2))          #Choose of heuristic algorithm and number of generations
+    algo = pg.algorithm(pg.pso_gen(gen=10))          #Choose of heuristic algorithm and number of generations
     pop = pg.population(prob,100)                        #Choose number of individuals
     pop = algo.evolve(pop)                              #Evolve the population
     y=pop.champion_x                                    #Extract the best DV division solution to minimize mass
@@ -162,7 +162,7 @@ def design_model(x,rocket,stage):
     
     if Obj==0:
         print(rocket.count, rocket.mass, "Worked")
-        print(stage[0].TWR,stage[1].TWR,stage[2].TWR,stage[3].TWR,stage[0].DV_Ratio,stage[1].DV_Ratio,stage[2].DV_Ratio,stage[3].DV_Ratio)
+        print(stage[0].TWR,stage[1].TWR,stage[2].TWR,stage[0].DV_Ratio,stage[1].DV_Ratio,stage[2].DV_Ratio)
         return rocket.mass
 
     else:
@@ -186,7 +186,7 @@ class Traj_Optimization2:
         return [fit]
 
     def get_bounds(self):
-        return ([-0.8,-0.8,0.1,1.45,-0.999,-0.999,-0.999,0.01],[0,0,200,1.55,0.999999,0.999999,0.999999,0.999])
+        return ([-0.8,-0.8,150,1.3,-0.999,-0.999,-0.999,0.990],[0,0,250,1.5,0.999999,0.999999,0.999999,0.999])
 
         
 
@@ -198,15 +198,15 @@ class Design_Optimization:
     def get_bounds(self):
       #  return ([stage[0].TWR*0.75,stage[1].TWR*0.75,stage[2].TWR*0.75,stage[3].TWR*0.75,stage[0].DV_Ratio*0.9,stage[1].DV_Ratio*0.9,stage[2].DV_Ratio*0.9,stage[3].DV_Ratio*0.9],
     #         [stage[0].TWR*1.25,stage[1].TWR*1.25,stage[2].TWR*1.25,stage[3].TWR*1.25,stage[0].DV_Ratio*1.05,stage[1].DV_Ratio*1.05,stage[2].DV_Ratio*1.05,stage[3].DV_Ratio*1.05])
-        return([0.2,0.2,0.32,0.05],[0.32,0.32,0.42,0.1])        
+        return([stage[0].DV_Ratio*0.9,stage[1].DV_Ratio*0.9,stage[2].DV_Ratio*0.9],[stage[0].DV_Ratio*1.05,stage[1].DV_Ratio*1.05,stage[2].DV_Ratio*1.05])        
 
 
 
 
 if general.Design_optimization:
     prob = pg.problem(Design_Optimization())
-    algo = pg.algorithm(pg.pso_gen(gen=10))          #Choose of heuristic algorithm and number of generations
-    pop = pg.population(prob,100)                        #Choose number of individuals
+    algo = pg.algorithm(pg.sga(gen=1))          #Choose of heuristic algorithm and number of generations
+    pop = pg.population(prob,125)                        #Choose number of individuals
     pop = algo.evolve(pop)                              #Evolve the population
     y=pop.champion_x                                    #Extract the best DV division solution to minimize mass
 
@@ -243,6 +243,8 @@ rocket,stage=Rocket_build(mission,rocket,stage, general)
 Information(mission,rocket,stage)
 
 """
+
+
 if general.Trajectory:
     prob = pg.problem(Traj_Optimization())
     algo = pg.algorithm(pg.pso_gen(gen=1000))          #Choose of heuristic algorithm and number of generations

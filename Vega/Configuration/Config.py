@@ -76,7 +76,7 @@ def Rocket_initialize():
     general.Trajectory=True                 #In order to perform a trajectory simulation    
     general.New_design=False             #If the user wants to use a pre existing rocket              
     general.TWR=True             #If the user wants to use Thrust to weight ratio for each iteration, instead of defining the initial Thrust
-    general.Design_optimization=False #Design and DV optimization
+    general.Design_optimization=True #Design and DV optimization
 
     #############  Trajectory Initialization#####################################
 
