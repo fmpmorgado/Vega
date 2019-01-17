@@ -111,21 +111,21 @@ def Rocket_initialize():
     mission.final_velocity=7500       #Final Rocket Velocity
     mission.final_flight_angle=0.0        #Final Flight Path Angle
     
-    mission.payload=1430+900                 #Mission Payload to carry
+    mission.payload=21000                 #Mission Payload to carry
 
 
     #############  Rocket setup and initialization ##################
 
     rocket=Rocket()
 
-    rocket.num_stages=3               #Number of Rocket stages
-    rocket.num_boosters=0               #Number of Rocket boosters
+    rocket.num_stages=2               #Number of Rocket stages
+    rocket.num_boosters=2#Number of Rocket boosters
 
     rocket.DV=10000                     #Initial guess of Rocket DV, which has to englobe thrust vectoring, gravity and drag losses
-    rocket.mass=137000                  #Initial Rocket mass (comparison only)
+    rocket.mass=218475                  #Initial Rocket mass (comparison only)
 
-    rocket.fairing=550
-
+    rocket.fairing=1500
+    rocket.material="Aluminium"
     #############  Stage setup and initialization ######################
 
     #### Parameters to include in the simulation, by stage order, i.e.,
@@ -134,8 +134,8 @@ def Rocket_initialize():
 
     ###     SIZING      ####
     
-    Diameter=[3,1.9,1.9,1.9]      #Stage diameter (mandatory)
-    length=[11.7,8.39,4.12,1.7]     #Stage length (*)
+    Diameter=[5.4,5.4]      #Stage diameter (mandatory)
+    length=[30.5,4.7]     #Stage length (*)
 
 
 
@@ -146,21 +146,21 @@ def Rocket_initialize():
     # on the Rocket mass of the current iteration
      
 #    Thrust=[2261000,1196000,260000,2420]*rocket.num_stages      #Stage Thrust (depends on the user choice)
-    Thrust=[2261000,1196000,260000]*rocket.num_stages      #Stage Thrust (depends on the user choice)
+    Thrust=[1400000,67000]      #Stage Thrust (depends on the user choice)
 
 
     TWR=[2]*rocket.num_stages                       #Thrust to Weight ratio (depends on the user choice)
     
-    Isp=[280,289,296]                   #Specific impulse of each stage (mandatory)
+    Isp=[440,446]                   #Specific impulse of each stage (mandatory)
 
-    Num_engines=[1,1,1,1]             #Number of engines of each stage (mandatory)
-    stage_type=["solid","solid","solid","liquid"] #Type of propellant (mandatory)
+    Num_engines=[1,1]             #Number of engines of each stage (mandatory)
+    stage_type=["liquid","liquid"] #Type of propellant (mandatory)
 
-    OF_ratio=[2.61,2.61,2.61,2.61]       #Propellant Oxidizer Fuel Ratio. (Only in the presence of liquid stages)
+    OF_ratio=[5.3,1.9]       #Propellant Oxidizer Fuel Ratio. (Only in the presence of liquid stages)
                                     #The array needs to be of the same size as the number of stages included
 
-    Oxidizer_density=[1800,1800,1800,1142]*rocket.num_stages       #The oxidizer density for liquid stages only
-    Fuel_density=[810]*rocket.num_stages            #The fuel density for liquid stages only
+    Oxidizer_density=[1142,1450]       #The oxidizer density for liquid stages only
+    Fuel_density=[71,880]            #The fuel density for liquid stages only
     
     #Falta trocar por um dicionário
 
@@ -171,10 +171,10 @@ def Rocket_initialize():
  #   total_mass=[88365+7431,23906+1845,10115+833,550+418]*rocket.num_stages           #Total Mass of the stage (comparison only)
  #   propellant_mass=[88365,23906,10115,550]*rocket.num_stages                        #Propellant Mass of the stage (comparison only)
 
-    total_mass=[88365+7431,23906+1845,10115+833]           #Total Mass of the stage (comparison only)
-    propellant_mass=[88365,23906,10115]                        #Propellant Mass of the stage (comparison only)
+    total_mass=[184700,11200]           #Total Mass of the stage (comparison only)
+    propellant_mass=[170000,10000]                        #Propellant Mass of the stage (comparison only)
 
-
+    thickness=[0.0055]*rocket.num_stages    
 
     Structural_Factor=[0.0]*rocket.num_stages                                        #Structural Factor (*)
 
@@ -188,13 +188,45 @@ def Rocket_initialize():
                                                     #or can be selected using a PSO algorithm to reduce the rocket mass, respecting the
                                                     #DV chosen in the rocket.DV, to fulldill the mission
 
+    booster=Stage()
 
+    booster.thrust=6200000*rocket.num_boosters
+    booster.total_mass=268000*rocket.num_boosters
+    booster.propellant_mass=237000*rocket.num_boosters
+    booster.Isp=350
+    booster.diameter=3.05
+    booster.length=31.6
+    booster.stage_type="solid"
+    booster.oxidizer_density=1800
+    booster.nozzle_area=5
+    booster.thickness=0.0055
+
+    if rocket.num_boosters>0:
+        Thrust.insert(0,booster.thrust)
+        total_mass.insert(0,booster.total_mass)
+        propellant_mass.insert(0,booster.propellant_mass)
+        Isp.insert(0,booster.Isp)
+        Diameter.insert(0,booster.diameter)
+        length.insert(0,booster.length)
+        stage_type.insert(0,booster.stage_type)    
+        Oxidizer_density.insert(0,booster.oxidizer_density)
+        Num_engines.insert(0,rocket.num_boosters)
+        nozzle_area.insert(0,booster.nozzle_area)
+        thickness.insert(0,booster.thickness)
+        
+        TWR.insert(0,0)
+        OF_ratio.insert(0,0)
+        DV.insert(0,0)
+        Fuel_density.insert(0,0)
+        DV_Ratio.insert(0,0)
+        Structural_Factor.insert(0,0)
+        
     ####### Stage initialization ########
 
-    stage = [Stage() for _ in range(rocket.num_stages)]
+    if rocket.num_boosters==0: stage = [Stage() for _ in range(rocket.num_stages)]
+    else: stage = [Stage() for _ in range(rocket.num_stages+1)]
 
-
-    for x in range(0,rocket.num_stages):
+    for x in range(0,len(stage)):
         stage[x].stage_num=x+1
         stage[x].diameter=Diameter[x]
         stage[x].thrust=Thrust[x]
@@ -216,26 +248,26 @@ def Rocket_initialize():
         stage[x].DV_Ratio=DV_Ratio[x]
 
         stage[x].nozzle_area=nozzle_area[x]
-
+        stage[x].thickness=thickness[x]
 
     # The code below is only used if the user wants to use a pre existing rocket and wants to compare.
     
     if general.New_design==False:
         rocket.DV=0
-        payload=Payload(stage,rocket.mass,rocket.num_stages)  #Payload given by inputs above
+        payload=Payload(stage,rocket.mass,len(stage))  #Payload given by inputs above
         rocket.mass=rocket.mass-payload+mission.payload+rocket.fairing    #Replacing payload and updating Rocket.mass
-        DV=DV_budget(stage,rocket.mass,rocket.num_stages)
-        stage[rocket.num_stages-1].payload=mission.payload
+        DV=DV_budget(stage,rocket.mass,len(stage))
+        stage[len(stage)-1].payload=mission.payload
 
-        for x in range(0,rocket.num_stages):
+        for x in range(0,len(stage)):
             stage[x].DV=DV[x]
             rocket.DV=rocket.DV+DV[x]
 
-        for x in range(0,rocket.num_stages):
+        for x in range(0,len(stage)):
             stage[x].DV_Ratio=stage[x].DV/rocket.DV
         
         payload=mission.payload+rocket.fairing
-        for x in range(rocket.num_stages-1,-1,-1):
+        for x in range(len(stage)-1,-1,-1):
             stage[x].payload=payload
             stage[x].TWR=stage[x].thrust/(stage[x].total_mass+stage[x].payload)/g0
             payload=payload+stage[x].total_mass

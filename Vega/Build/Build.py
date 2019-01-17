@@ -10,12 +10,8 @@ g0=9.810665
 
 
 
-#stage wall thickness considered
-th=0.01
 
 #Material constants --- Criar dicionário depois
-Ftu=310*10**6
-rhomat=2700 #al alloy
 
 ###### Mudar depois para Config de material
 
@@ -29,6 +25,12 @@ def Rocket_build(mission,rocket,stage,general):
     DV_lb=[0.2,0.2,0.2,0.05]             #DV Boundaries for the PSO algorithm
     DV_ub=[0.6,0.6,0.6,0.2]
 
+
+
+
+    if rocket.material=="Aluminium":
+        rhomat=2700 #al alloy
+        Ftu=310*10**6
 
 
 #Model used to find the fitness in the PSO algorithm
@@ -48,7 +50,7 @@ def Rocket_build(mission,rocket,stage,general):
                 
                 Kn=math.exp(stage[x].DV/(g0*stage[x].Isp))
                 stage[x].propellant_mass = (Kn-1)*(stage[x].payload+stage[x].structural_mass)
-                stage[x].structural_mass = Massa2.stage_mass(stage[x],rocket.payload,th,Ftu,rhomat)
+                stage[x].structural_mass = Massa2.stage_mass(stage[x],rocket,rocket.payload,stage[x].thickness,Ftu,rhomat)
                 stage[x].structural_factor = stage[x].structural_mass/(stage[x].structural_mass+stage[x].propellant_mass)
 
                 stage[x].total_mass=stage[x].structural_mass+stage[x].propellant_mass+stage[x].payload
@@ -97,7 +99,7 @@ def Rocket_build(mission,rocket,stage,general):
 
 
                 
-    for x in range(rocket.num_stages-1,-1,-1):              #Building the rocket, taking in consideration the mass equations in the module Mass 
+    for x in range(len(stage)-1,-1,-1):              #Building the rocket, taking in consideration the mass equations in the module Mass 
         stage[x].payload=rocket.mass                        #The function starts Building the rocket beginning with the last stage. Each stage iteration
                                                             #ends when the structural factor converges
         while True:
@@ -106,7 +108,7 @@ def Rocket_build(mission,rocket,stage,general):
             
             Kn=math.exp(stage[x].DV/(g0*stage[x].Isp))
             stage[x].propellant_mass = (Kn-1)*(stage[x].payload+stage[x].structural_mass)
-            stage[x].structural_mass = Massa2.stage_mass(stage[x],rocket.payload,th,Ftu,rhomat)
+            stage[x].structural_mass = Massa2.stage_mass(stage[x],rocket,rocket.payload,stage[x].thickness,Ftu,rhomat)
             stage[x].structural_factor = stage[x].structural_mass/(stage[x].structural_mass+stage[x].propellant_mass)
 
             stage[x].total_mass=stage[x].structural_mass+stage[x].propellant_mass+stage[x].payload
@@ -115,6 +117,7 @@ def Rocket_build(mission,rocket,stage,general):
 
             if (abs(stage[x].structural_factor-aux)/stage[x].structural_factor)<10**-6:
                 stage[x].total_mass=stage[x].structural_mass+stage[x].propellant_mass
+                stage[x].length=Massa2.stage_length(stage[x])
                 break
 
 

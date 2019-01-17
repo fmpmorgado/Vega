@@ -35,11 +35,11 @@ def Dynamic_pressure(rho,V):
     q=1/2*rho*V**2
     return q
 
-def Knudsen(L,rho,T,m):
+def Knudsen(L,rho,T):
     dynamic_viscosity=1.716e-5*(T/273.15)**(3/2)*(273.15+110.4)/(T+110.4)
     boltzmann=1.3806485279e-23
     molecular_mass=28.97/6.023e26
-    kn=dynamic_viscosity/(L*rho)*m.sqrt((pi*molecular_mass)/(2*T*boltzmann))
+    kn=dynamic_viscosity/(L*rho)*sqrt((pi*molecular_mass)/(2*T*boltzmann))
     return kn
 
 
@@ -47,14 +47,10 @@ def Knudsen(L,rho,T,m):
 
 
 
-def Drag_force(rho,T,Sref,V,L,m):
+def Drag_force(rho,T,Sref,V,L):
 
-    if type(rho) is np.float64:
-        kn=Knudsen(L,rho,T,m)
-    else:
-        kn=Knudsen(L,rho,T,m)
-        print("Deu")
-        print(kn.value)
+       
+    kn=Knudsen(L,rho,T)
     kn_inf=0.0146241
     kn_sup=1000*kn_inf
     A=2
@@ -66,7 +62,7 @@ def Drag_force(rho,T,Sref,V,L,m):
     Mach=V/a
     CD=Drag_Coeff(Mach)
 
-    if kn.value<kn_inf:
+    if kn<kn_inf:
         D = 1/2*rho*CD*Sref*V**2
     elif kn>kn_sup:
         D = 1/2*rho*CDfm*Sref*V**2

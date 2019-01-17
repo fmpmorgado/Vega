@@ -88,7 +88,7 @@ def Information(mission,rocket,stage):
 
 
 
-    for x in range(0,rocket.num_stages):
+    for x in range(0,len(stage)):
         print("**************************************************************************************")
         print("**************************************************************************************")   
         print("*****                                 Stage {0:0d}                                    *****".format(stage[x].stage_num))

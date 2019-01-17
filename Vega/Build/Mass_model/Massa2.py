@@ -34,7 +34,7 @@ def Tank_solid_length(rho,diameter,Mass):
     Vtank=0.000693062*Mass+ 1.805
     #Vtank=0.000778164*Mass
     Length=(Vtank)/((diameter/2)**2*math.pi)
-    return Length*1
+    return Length*1.275
 ######################Liquid Propulsion system #######################
 
 
@@ -65,11 +65,17 @@ def Fuel_tank(rho,Mass,Ratio,D,Fmat,rhomat):
     
     Pb=2*1.2*10**(-0.10688*(math.log(Vtank)-0.2588))*10**6
 
+
+    
     tc=0.5*Pb*Dtank/Fmat
     ts=0.25*Pb*Dtank/Fmat
 
     lc=(Vtank-4/3*math.pi*(Dtank/2)**3)/(math.pi*(Dtank/2)**2)
 
+    if lc<0:
+        rtank=(Vtank/4*3/math.pi)**(1/3)
+        TankMass=(ts*4*math.pi*(rtank)**2)*rhomat
+        return TankMass
 
     TankMass=(tc*lc*2*math.pi*Dtank/2+ts*4*math.pi*(Dtank/2)**2)*rhomat
 
@@ -90,6 +96,12 @@ def Oxidizer_tank(rho,Mass,Ratio,D,Fmat,rhomat):
     ts=0.25*Pb*Dtank/Fmat
 
     lc=(Vtank-4/3*math.pi*(Dtank/2)**3)/(math.pi*(Dtank/2)**2)
+
+    if lc<0:
+        rtank=(Vtank/4*3/math.pi)**(1/3)
+        TankMass=(ts*4*math.pi*(rtank)**2)*rhomat
+        return TankMass
+
 
     TankMass=(tc*lc*2*math.pi*Dtank/2+ts*4*math.pi*(Dtank/2)**2)*rhomat
 
@@ -233,21 +245,32 @@ def payload_fairing_length(diameter, payload):
 
 ####################################   Stage mass
 
-def stage_mass(stage,payload,th,Ftu,rhomat):
+def stage_mass(stage,rocket,payload,th,Ftu,rhomat):
     Total=0
 
     #Total=Total+Motor_case(M_prop)
     if(stage.stage_type=="solid"):
-        Total=Total+Motor(stage.propellant_mass,stage.thrust)
-
+        if rocket.num_boosters>0 and stage.stage_num==1:
+            Total=Total+Motor(stage.propellant_mass/rocket.num_boosters,stage.thrust/rocket.num_boosters)*rocket.num_boosters
+            th=0.015
+            Total=Total+math.pi*stage.diameter*stage.length*th*rhomat
+        else:
+            Total=Total+Motor(stage.propellant_mass,stage.thrust)
     if(stage.stage_type=="liquid"):
         Total=Total+Fuel_tank(stage.fuel_density,stage.propellant_mass,stage.OF_ratio,stage.diameter,Ftu,rhomat)
         Total=Total+Oxidizer_tank(stage.oxidizer_density,stage.propellant_mass,stage.OF_ratio,stage.diameter,Ftu,rhomat)
         Total=Total+Thrust_chamber(stage.thrust/stage.num_engines)*stage.num_engines
         Total=Total+Support_structure(stage.thrust/stage.num_engines)*stage.num_engines
-    
+
+        print(Fuel_tank(stage.fuel_density,stage.propellant_mass,stage.OF_ratio,stage.diameter,Ftu,rhomat),
+              Oxidizer_tank(stage.oxidizer_density,stage.propellant_mass,stage.OF_ratio,stage.diameter,Ftu,rhomat),
+              Thrust_chamber(stage.thrust/stage.num_engines)*stage.num_engines,
+              Support_structure(stage.thrust/stage.num_engines)*stage.num_engines,
+              math.pi*stage.diameter*stage.length*th*rhomat)  
 
     #Out structure
+    stage.length=stage_length(stage)
+
     if(stage.stage_type=="liquid"): 
         Total=Total+math.pi*stage.diameter*stage.length*th*rhomat
 
@@ -265,14 +288,19 @@ def stage_length(stage):
     Length=0
     
     if(stage.stage_type=="liquid"):
-        if stage.stage_num!=1:
-            Length=Length + Tank_fuel_length(stage.fuel_density,stage.propellant_mass,stage.OF_ratio,stage.diameter)
+        #if stage.stage_num!=1:
+        Length=Length + Tank_fuel_length(stage.fuel_density,stage.propellant_mass,stage.OF_ratio,stage.diameter)
         Length=Length + Tank_oxidizer_length(stage.oxidizer_density,stage.propellant_mass,stage.OF_ratio,stage.diameter)
         Length=Length + Thrust_chamber_length(stage.thrust)
         Length=1.00*Length
 
 
+
+
     if (stage.stage_type=="solid"):
         Length=Length + Tank_solid_length(stage.oxidizer_density,stage.diameter,stage.propellant_mass)
     
+
+
+
     return Length    

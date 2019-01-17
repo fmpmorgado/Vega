@@ -3,12 +3,13 @@ import sys
 
 
 sys.path.append('./Configuration')
-from Config import Rocket_initialize
+from Config_B import Rocket_initialize
 
 sys.path.append('./Output')
 from Output import Graphs,Information
 
 
+import matplotlib.pyplot as plt
 
 import time
 import pygmo as pg
@@ -29,10 +30,13 @@ optim=True
 
 now = time.clock()
 
+from Atmosphere import atmosphere
+from Aerodynamics import Knudsen,Drag_force,Drag_Coeff,Dynamic_pressure
+from math import exp,pi
 
 mission,rocket,stage,trajectory,general=Rocket_initialize()
 
-print(rocket.DV)
+#print(rocket.DV)
 Information(mission,rocket,stage)
 
 
@@ -121,7 +125,8 @@ def traj_model2(x,rocket):
     #print(Data[2][-1],Data[3][-1],Data[4][-1],Data[0][-1])
         
 
-    if abs(Data[2][-1]-mission.final_altitude)>50000 or abs(Data[3][-1]-mission.final_velocity)>500 or abs(Data[4][-1])>0.5:
+    
+    if abs(Data[2][-1]-mission.final_altitude)>10000 or abs(Data[3][-1]-mission.final_velocity)>100 or abs(Data[4][-1])>0.15:
         #print("A")
         return 1e20
 
@@ -149,10 +154,28 @@ def design_model(x,rocket,stage):
     rocket.count=rocket.count+1
 
     prob = pg.problem(Traj_Optimization2())
-    algo = pg.algorithm(pg.pso_gen(gen=10))          #Choose of heuristic algorithm and number of generations
+    algo = pg.algorithm(pg.pso_gen(gen=50))          #Choose of heuristic algorithm and number of generations
     pop = pg.population(prob,100)                        #Choose number of individuals
     pop = algo.evolve(pop)                              #Evolve the population
     y=pop.champion_x                                    #Extract the best DV division solution to minimize mass
+
+    trajectory.alpha[0]=y[0]
+    trajectory.alpha[1]=y[1]
+    trajectory.coast_time=y[2]
+    trajectory.pitch=y[3]
+    trajectory.l[0]=y[4]
+    trajectory.l[1]=y[5]
+    trajectory.l[2]=y[6]
+    trajectory.aux=y[7]
+
+
+
+    Data,new,Obj=init_trajectory(mission,rocket,stage,trajectory,general)
+
+
+    if general.constraints:
+        for i in range(0,len(Data[0])):
+            if Data[12][i]/Data[5][i]/g0>5 or Dynamic_pressure(1.225*exp(-Data[2][i]/8440),Data[3][i])>50000: return 1e20
 
     rocket.optim2=True
         
@@ -177,7 +200,7 @@ class Traj_Optimization:
         return [fit]
 
     def get_bounds(self):
-        return ([-0.8,-0.8,0.1,1.45,-0.999,-0.999,-0.999,0.01],[0,0,200,1.55,0.999999,0.999999,0.999999,0.999])
+        return ([-0.8,-0.8,1,1.47,-0.999,-0.999,-0.999,0.01],[0,0,350,1.56,0.999999,0.999999,0.999999,0.999])
 
 
 class Traj_Optimization2:
@@ -186,7 +209,7 @@ class Traj_Optimization2:
         return [fit]
 
     def get_bounds(self):
-        return ([-0.8,-0.8,150,1.3,-0.999,-0.999,-0.999,0.990],[0,0,250,1.5,0.999999,0.999999,0.999999,0.999])
+        return ([-0.8,-0.8,250,1.45,-0.999,-0.999,-0.999,0.50],[0,0,350,1.56,0.999999,0.999999,0.999999,0.999])
 
         
 
@@ -208,7 +231,7 @@ if general.Design_optimization:
     algo = pg.algorithm(pg.sga(gen=1))          #Choose of heuristic algorithm and number of generations
     pop = pg.population(prob,125)                        #Choose number of individuals
     pop = algo.evolve(pop)                              #Evolve the population
-    y=pop.champion_x                                    #Extract the best DV division solution to minimize mass
+    y=pop.champion_x                               #Extract the best DV division solution to minimize mass
 
 
     #print(y)
@@ -225,6 +248,8 @@ if general.Design_optimization:
 
     
     print("Time=", time.clock()-now)
+
+
 
 """
 
@@ -245,38 +270,83 @@ Information(mission,rocket,stage)
 """
 
 
+if rocket.num_boosters !=0:
+    time_burn=stage[0].propellant_mass*stage[0].Isp*g0/stage[0].thrust
+    stage[0].propellant_mass=stage[0].propellant_mass+stage[1].thrust/stage[1].Isp/g0*time_burn
+    stage[1].propellant_mass=stage[1].propellant_mass-stage[1].thrust/stage[1].Isp/g0*time_burn
+    stage[0].payload=stage[0].payload-stage[1].thrust/stage[1].Isp/g0*time_burn
+
 if general.Trajectory:
     prob = pg.problem(Traj_Optimization())
-    algo = pg.algorithm(pg.pso_gen(gen=1000))          #Choose of heuristic algorithm and number of generations
-    pop = pg.population(prob,100)                        #Choose number of individuals
+    algo = pg.algorithm(pg.pso_gen(gen=500))          #Choose of heuristic algorithm and number of generations
+    pop = pg.population(prob,250)                        #Choose number of individuals
     pop = algo.evolve(pop)                              #Evolve the population
     y=pop.champion_x                                    #Extract the best DV division solution to minimize mass
 
 
+    trajectory.alpha[0]=y[0]
+    trajectory.alpha[1]=y[1]
+    trajectory.coast_time=y[2]
+    trajectory.pitch=y[3]
+    trajectory.l[0]=y[4]
+    trajectory.l[1]=y[5]
+    trajectory.l[2]=y[6]
+    trajectory.aux=y[7]
 
 
+    print()
 
-
-
-trajectory.alpha[0]=y[0]
-trajectory.alpha[1]=y[1]
-trajectory.coast_time=y[2]
-trajectory.pitch=y[3]
-trajectory.l[0]=y[4]
-trajectory.l[1]=y[5]
-trajectory.l[2]=y[6]
-trajectory.aux=y[7]
-
-
-print()
+"""
+trajectory.coast_time=2.77594163e+02
+trajectory.pitch=1.47575848e+00
+trajectory.l[0]=-2.10763106e-03
+trajectory.l[1]=7.12057203e-01 
+trajectory.l[2]=-8.85632384e-01
+trajectory.aux=9.37180755e-01
+"""
 
 
 
 Data,new,Obj=init_trajectory(mission,rocket,stage,trajectory,general)
-print(Data[2][-1])
+print(Data[2][-1], time.clock()-now)
 
+    
+#print("Time=", time.clock()-now, y)
 
-print("Time=", time.clock()-now)
+kn=[]
+D=[]
+a=[]
+q=[]
+cd=[]
+
+"""
+for i in range(0,len(Data[0])):
+    T=atmosphere(Data[2][i])[0]
+    rho=1.225*exp(-Data[2][i]/8440)
+    L=0.1
+    V=Data[3][i]
+    Sref=4
+         
+    kn.extend([Knudsen(L,rho,T)])
+    D.extend([1/2*1.225*exp(-Data[2][i]/8440)*Sref*Drag_Coeff(V/math.sqrt(1.4*287.053*T))*V**2])
+    a.extend([Data[12][i]/Data[5][i]/g0])
+    cd.extend([Drag_Coeff(V/math.sqrt(1.4*287.053*T))])    
+    q.extend([Dynamic_pressure(rho,V)])
+    
+
+plt.plot(Data[2][0:650], kn[0:650])
+plt.show()
+
+plt.plot(Data[0],a)
+plt.show()
+
+plt.plot(Data[0][0:650],D[0:650])
+plt.plot(Data[0][0:650],D2[0:650])
+
+plt.show()
+"""
+    
 
 Graphs(Data)
+
 
